@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CST Airfoil Shape Explorer</title>
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    max-width: 760px;
+    margin: 40px auto;
+    padding: 0 20px;
+    color: #222;
+    background: #fafafa;
+  }
+  h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+  p.sub { color: #666; font-size: 14px; margin-top: 0; margin-bottom: 24px; }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+  input[type="range"] { width: 130px; }
+  button {
+    border: 1px solid #ccc; background: #fff; border-radius: 6px;
+    padding: 6px 14px; font-size: 13px; cursor: pointer;
+  }
+  button:hover { background: #f0f0f0; }
+</style>
+</head>
+<body>
+
+<h1>CST airfoil shape explorer</h1>
+<p class="sub">Live implementation of bernstein_basis / cst_curve from the CST parameterization code. Drag the weights to reshape the airfoil.</p>
+
+<h2 class="sr-only">Interactive explorer showing how CST Bernstein weight parameters reshape an airfoil profile</h2>
+
+<div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap; margin-bottom:14px;">
+  <div style="display:flex; align-items:center; gap:8px;">
+    <label style="font-size:13px; color:#666; min-width:64px;">w0 (nose)</label>
+    <input type="range" id="w0" min="-0.1" max="1" step="0.01" value="0.15" oninput="redraw()">
+    <span id="w0-val" style="font-size:13px; min-width:38px; font-weight:600;">0.15</span>
+  </div>
+  <div style="display:flex; align-items:center; gap:8px;">
+    <label style="font-size:13px; color:#666; min-width:64px;">dz (TE gap)</label>
+    <input type="range" id="dz" min="0" max="0.1" step="0.005" value="0.01" oninput="redraw()">
+    <span id="dz-val" style="font-size:13px; min-width:38px; font-weight:600;">0.010</span>
+  </div>
+  <button onclick="resetAll()" style="margin-left:auto;">Reset</button>
+</div>
+
+<div style="display:grid; grid-template-columns: 22px 1fr 38px 14px 22px 1fr 38px; row-gap:6px; column-gap:4px; align-items:center;">
+  <div style="grid-column:1/4; font-size:12px; color:#666;">Upper surface weights</div>
+  <div></div>
+  <div style="grid-column:5/8; font-size:12px; color:#666;">Lower surface weights</div>
+
+  <div style="font-size:12px; color:#666;">u1</div><input type="range" id="wu1" min="-1" max="1" step="0.01" value="0.15" oninput="redraw()"><span id="wu1-val" style="font-size:12px;">0.15</span><div></div>
+  <div style="font-size:12px; color:#666;">l1</div><input type="range" id="wl1" min="-1" max="1" step="0.01" value="0.15" oninput="redraw()"><span id="wl1-val" style="font-size:12px;">0.15</span>
+
+  <div style="font-size:12px; color:#666;">u2</div><input type="range" id="wu2" min="-1" max="1" step="0.01" value="0.15" oninput="redraw()"><span id="wu2-val" style="font-size:12px;">0.15</span><div></div>
+  <div style="font-size:12px; color:#666;">l2</div><input type="range" id="wl2" min="-1" max="1" step="0.01" value="0.15" oninput="redraw()"><span id="wl2-val" style="font-size:12px;">0.15</span>
+
+  <div style="font-size:12px; color:#666;">u3</div><input type="range" id="wu3" min="-1" max="1" step="0.01" value="0.15" oninput="redraw()"><span id="wu3-val" style="font-size:12px;">0.15</span><div></div>
+  <div style="font-size:12px; color:#666;">l3</div><input type="range" id="wl3" min="-1" max="1" step="0.01" value="0.15" oninput="redraw()"><span id="wl3-val" style="font-size:12px;">0.15</span>
+
+  <div style="font-size:12px; color:#666;">u4</div><input type="range" id="wu4" min="-1" max="1" step="0.01" value="0.15" oninput="redraw()"><span id="wu4-val" style="font-size:12px;">0.15</span><div></div>
+  <div style="font-size:12px; color:#666;">l4</div><input type="range" id="wl4" min="-1" max="1" step="0.01" value="0.15" oninput="redraw()"><span id="wl4-val" style="font-size:12px;">0.15</span>
+
+  <div style="font-size:12px; color:#666;">u5</div><input type="range" id="wu5" min="-1" max="1" step="0.01" value="0.15" oninput="redraw()"><span id="wu5-val" style="font-size:12px;">0.15</span><div></div>
+  <div style="font-size:12px; color:#666;">l5</div><input type="range" id="wl5" min="-1" max="1" step="0.01" value="0.15" oninput="redraw()"><span id="wl5-val" style="font-size:12px;">0.15</span>
+
+  <div style="font-size:12px; color:#666;">u6</div><input type="range" id="wu6" min="-1" max="1" step="0.01" value="0.15" oninput="redraw()"><span id="wu6-val" style="font-size:12px;">0.15</span><div></div>
+  <div style="font-size:12px; color:#666;">l6</div><input type="range" id="wl6" min="-1" max="1" step="0.01" value="0.15" oninput="redraw()"><span id="wl6-val" style="font-size:12px;">0.15</span>
+
+  <div style="font-size:12px; color:#666;">u7</div><input type="range" id="wu7" min="-1" max="1" step="0.01" value="0.15" oninput="redraw()"><span id="wu7-val" style="font-size:12px;">0.15</span><div></div>
+  <div style="font-size:12px; color:#666;">l7</div><input type="range" id="wl7" min="-1" max="1" step="0.01" value="0.15" oninput="redraw()"><span id="wl7-val" style="font-size:12px;">0.15</span>
+</div>
+
+<svg width="100%" viewBox="0 0 680 320" role="img" style="margin-top:14px; background:#fff; border:1px solid #e5e5e5; border-radius:8px;">
+  <title>CST airfoil shape preview</title>
+  <desc>Live outline of the upper and lower airfoil surfaces computed from the current Bernstein weights and trailing edge thickness, using the same equations as cst_curve in the code</desc>
+  <line x1="40" y1="170" x2="640" y2="170" stroke="#ccc" stroke-width="0.75" stroke-dasharray="4 4"/>
+  <path id="shape" fill="#cfe6f7" stroke="#2b6ca8" stroke-width="1.5" opacity="0.9"/>
+</svg>
+
+<script>
+const N = 7;
+const binom = [1,7,21,35,35,21,7,1];
+
+function classFn(x){ return Math.sqrt(x)*(1-x); }
+
+function shapeFn(x,w){
+  let s = 0;
+  for (let k=0;k<=N;k++){ s += w[k]*binom[k]*Math.pow(x,k)*Math.pow(1-x,N-k); }
+  return s;
+}
+
+function ids(prefix){ return [1,2,3,4,5,6,7].map(i=>prefix+i); }
+
+function getWeights(prefix){
+  const w0 = parseFloat(document.getElementById('w0').value);
+  const rest = ids(prefix).map(id=>parseFloat(document.getElementById(id).value));
+  return [w0, ...rest];
+}
+
+function X(x){ return 40 + 600*x; }
+function Y(y){ return 170 - 280*y; }
+
+function redraw(){
+  const wu = getWeights('wu');
+  const wl = getWeights('wl');
+  const dz = parseFloat(document.getElementById('dz').value);
+  const n = 100;
+  const upperPts = [], lowerPts = [];
+
+  for (let i=0;i<=n;i++){
+    const x = i/n;
+    const C = classFn(x);
+    const yu = C*shapeFn(x,wu) + x*(dz/2);
+    const yl = -C*shapeFn(x,wl) - x*(dz/2);
+    upperPts.push([X(x),Y(yu)]);
+    lowerPts.push([X(x),Y(yl)]);
+  }
+
+  const d = 'M ' + upperPts.map(p=>p.join(',')).join(' L ') + ' L ' +
+            lowerPts.slice().reverse().map(p=>p.join(',')).join(' L ') + ' Z';
+  document.getElementById('shape').setAttribute('d', d);
+
+  document.getElementById('w0-val').textContent = parseFloat(document.getElementById('w0').value).toFixed(2);
+  document.getElementById('dz-val').textContent = parseFloat(document.getElementById('dz').value).toFixed(3);
+  for (const id of [...ids('wu'), ...ids('wl')]){
+    document.getElementById(id+'-val').textContent = parseFloat(document.getElementById(id).value).toFixed(2);
+  }
+}
+
+function resetAll(){
+  document.getElementById('w0').value = 0.15;
+  document.getElementById('dz').value = 0.01;
+  for (const id of [...ids('wu'), ...ids('wl')]) document.getElementById(id).value = 0.15;
+  redraw();
+}
+
+redraw();
+</script>
+</body>
+</html>
